@@ -1,0 +1,6 @@
+{
+  "name": "Worm",
+  "description": "Play Tic-Tac-Toe vs AI or real opponents in Worm, watch sponsor ads to unlock matches, earn real INR cash rewards, and withdraw directly to Bank Account or UPI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
