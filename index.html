@@ -12,14 +12,30 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
   </head>
   <body class="bg-[#020617] text-slate-100 antialiased min-h-screen">
     <div id="root">
-      <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#020617;color:#94a3b8;font-family:Arial,sans-serif">
+      <div id="startup-loader" style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#020617;color:#94a3b8;font-family:Arial,sans-serif">
         <div style="text-align:center"><div style="font-size:18px;font-weight:700;color:#fff">Worm</div><div style="margin-top:8px;font-size:13px">Loading app…</div></div>
       </div>
     </div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Never let an external service block the React application from starting.
+      window.addEventListener('load', function () {
+        var s = document.createElement('script');
+        s.src = 'https://telegram.org/js/telegram-web-app.js';
+        s.async = true;
+        s.onerror = function () { console.warn('Telegram WebApp SDK unavailable; continuing normally.'); };
+        document.head.appendChild(s);
+      });
+      // If React fails to mount, replace the endless loader with a retry message.
+      setTimeout(function () {
+        var root = document.getElementById('root');
+        if (root && root.querySelector('#startup-loader')) {
+          root.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#020617;color:#94a3b8;font-family:Arial,sans-serif;padding:24px"><div style="text-align:center"><div style="font-size:18px;font-weight:700;color:#fff">Worm</div><div style="margin-top:8px;font-size:13px">The app did not start. <button onclick="location.reload()" style="margin-top:14px;padding:10px 18px;border:0;border-radius:10px;background:#0ea5e9;color:#fff;font-weight:700;cursor:pointer">Retry</button></div></div></div>';
+        }
+      }, 12000);
+    </script>
+    <script type="module" src="/worm/src/main.tsx"></script>
   </body>
 </html>
