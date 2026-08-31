@@ -15,45 +15,6 @@ interface AdModalProps {
   onClose?: () => void;
 }
 
-const MONETAG_SRC = '//libtl.com/sdk.js';
-const MONETAG_ZONE = '11697097';
-const MONETAG_SDK = 'show_11697097';
-
-function loadMonetagSdk(): Promise<void> {
-  if (typeof window.show_11697097 === 'function') return Promise.resolve();
-
-  return new Promise((resolve, reject) => {
-    const existing = document.querySelector<HTMLScriptElement>(
-      `script[data-zone="${MONETAG_ZONE}"][data-sdk="${MONETAG_SDK}"]`,
-    );
-
-    if (existing) {
-      if (typeof window.show_11697097 === 'function') {
-        resolve();
-        return;
-      }
-      existing.addEventListener('load', () => resolve(), { once: true });
-      existing.addEventListener('error', () => reject(new Error('Monetag SDK failed to load')), { once: true });
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = MONETAG_SRC;
-    script.async = true;
-    script.dataset.zone = MONETAG_ZONE;
-    script.dataset.sdk = MONETAG_SDK;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Monetag SDK failed to load'));
-    document.head.appendChild(script);
-  });
-}
-
-interface AdModalProps {
-  isOpen: boolean;
-  onAdComplete: () => void;
-  onClose?: () => void;
-}
-
 export const AdModal: React.FC<AdModalProps> = ({ isOpen, onAdComplete, onClose }) => {
   const startedRef = useRef(false);
   const [status, setStatus] = useState<'loading' | 'error'>('loading');
@@ -70,15 +31,8 @@ export const AdModal: React.FC<AdModalProps> = ({ isOpen, onAdComplete, onClose 
 
     const showRewardedAd = async () => {
       try {
-        await loadMonetagSdk();
-
-        for (let attempt = 0; attempt < 40; attempt++) {
-          if (typeof window.show_11697097 === 'function') break;
-          await new Promise((resolve) => setTimeout(resolve, 250));
-        }
-
         if (typeof window.show_11697097 !== 'function') {
-          throw new Error('Monetag rewarded interstitial is not available');
+          throw new Error('Monetag rewarded interstitial is still loading');
         }
 
         sounds.playClick();
@@ -112,27 +66,17 @@ export const AdModal: React.FC<AdModalProps> = ({ isOpen, onAdComplete, onClose 
                 <ShieldCheck className="w-7 h-7 text-rose-400" />
               )}
             </div>
-
             {status === 'loading' ? (
               <>
-                <h3 className="text-lg font-black">Loading rewarded ad...</h3>
-                <p className="mt-2 text-sm text-slate-400">
-                  Please watch the ad to unlock your game.
-                </p>
+                <h3 className="text-lg font-black">Opening rewarded ad...</h3>
+                <p className="mt-2 text-sm text-slate-400">Please wait a moment.</p>
               </>
             ) : (
               <>
                 <h3 className="text-lg font-black">Ad unavailable</h3>
-                <p className="mt-2 text-sm text-slate-400">
-                  The rewarded ad could not be loaded. Please try again.
-                </p>
+                <p className="mt-2 text-sm text-slate-400">No rewarded ad is available right now. Please try PLAY again.</p>
                 {onClose && (
-                  <button
-                    onClick={onClose}
-                    className="mt-5 w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 font-bold"
-                  >
-                    Close
-                  </button>
+                  <button onClick={onClose} className="mt-5 w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 font-bold">Close</button>
                 )}
               </>
             )}
