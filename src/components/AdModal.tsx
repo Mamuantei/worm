@@ -15,6 +15,45 @@ interface AdModalProps {
   onClose?: () => void;
 }
 
+const MONETAG_SRC = '//libtl.com/sdk.js';
+const MONETAG_ZONE = '11697097';
+const MONETAG_SDK = 'show_11697097';
+
+function loadMonetagSdk(): Promise<void> {
+  if (typeof window.show_11697097 === 'function') return Promise.resolve();
+
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector<HTMLScriptElement>(
+      `script[data-zone="${MONETAG_ZONE}"][data-sdk="${MONETAG_SDK}"]`,
+    );
+
+    if (existing) {
+      if (typeof window.show_11697097 === 'function') {
+        resolve();
+        return;
+      }
+      existing.addEventListener('load', () => resolve(), { once: true });
+      existing.addEventListener('error', () => reject(new Error('Monetag SDK failed to load')), { once: true });
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = MONETAG_SRC;
+    script.async = true;
+    script.dataset.zone = MONETAG_ZONE;
+    script.dataset.sdk = MONETAG_SDK;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Monetag SDK failed to load'));
+    document.head.appendChild(script);
+  });
+}
+
+interface AdModalProps {
+  isOpen: boolean;
+  onAdComplete: () => void;
+  onClose?: () => void;
+}
+
 export const AdModal: React.FC<AdModalProps> = ({ isOpen, onAdComplete, onClose }) => {
   const startedRef = useRef(false);
   const [status, setStatus] = useState<'loading' | 'error'>('loading');
@@ -30,18 +69,18 @@ export const AdModal: React.FC<AdModalProps> = ({ isOpen, onAdComplete, onClose 
     setStatus('loading');
 
     const showRewardedAd = async () => {
-      for (let attempt = 0; attempt < 30; attempt++) {
-        if (typeof window.show_11697097 === 'function') break;
-        await new Promise((resolve) => setTimeout(resolve, 250));
-      }
-
-      if (typeof window.show_11697097 !== 'function') {
-        console.error('Monetag rewarded interstitial is not loaded.');
-        setStatus('error');
-        return;
-      }
-
       try {
+        await loadMonetagSdk();
+
+        for (let attempt = 0; attempt < 40; attempt++) {
+          if (typeof window.show_11697097 === 'function') break;
+          await new Promise((resolve) => setTimeout(resolve, 250));
+        }
+
+        if (typeof window.show_11697097 !== 'function') {
+          throw new Error('Monetag rewarded interstitial is not available');
+        }
+
         sounds.playClick();
         await window.show_11697097();
         sounds.playAdComplete();
