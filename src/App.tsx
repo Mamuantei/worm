@@ -23,6 +23,12 @@ import { AdModal } from './components/AdModal';
 import { GuideModal } from './components/GuideModal';
 import { Navigation } from './components/Navigation';
 
+declare global {
+  interface Window {
+    show_11697097?: () => Promise<unknown>;
+  }
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('home');
   const [wallet, setWallet] = useState<UserWallet>(getStoredWallet);
@@ -31,6 +37,7 @@ export default function App() {
   const [referralCode] = useState<string>(getReferralCode);
 
   const [isAdModalOpen, setIsAdModalOpen] = useState<boolean>(false);
+  const [isAdLoading, setIsAdLoading] = useState<boolean>(false);
   const [isGuideModalOpen, setIsGuideModalOpen] = useState<boolean>(false);
   const [isAdminLoginModalOpen, setIsAdminLoginModalOpen] = useState<boolean>(false);
   const [userPhoneNumber, setUserPhoneNumber] = useState<string>(() => {
@@ -67,12 +74,29 @@ export default function App() {
     });
   };
 
-  // Trigger Play -> First show mandatory Ad modal
-  const handleInitiatePlay = () => {
-    setIsAdModalOpen(true);
+  // Start Monetag Rewarded Interstitial directly from the user's tap.
+  const handleInitiatePlay = async () => {
+    if (isAdLoading) return;
+    setIsAdLoading(true);
+
+    try {
+      if (typeof window.show_11697097 !== 'function') {
+        throw new Error('Monetag SDK function is not available');
+      }
+
+      sounds.playClick();
+      await window.show_11697097();
+      sounds.playAdComplete();
+      setActiveTab('game');
+    } catch (error) {
+      console.error('Monetag rewarded interstitial failed:', error);
+      // Keep the game usable if Monetag has no inventory or the ad fails.
+      setActiveTab('game');
+    } finally {
+      setIsAdLoading(false);
+    }
   };
 
-  // Called when 5s Ad finishes watching
   const handleAdComplete = () => {
     setIsAdModalOpen(false);
     setActiveTab('game');
