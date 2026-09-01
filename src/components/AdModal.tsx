@@ -15,52 +15,6 @@ interface AdModalProps {
   onClose?: () => void;
 }
 
-const SDK_SRC = 'https://libtl.com/sdk.js';
-const ZONE = '11697097';
-const SDK_NAME = 'show_11697097';
-const SDK_TIMEOUT_MS = 6000;
-const AD_TIMEOUT_MS = 12000;
-
-let sdkPromise: Promise<void> | null = null;
-
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => setTimeout(() => reject(new Error(message)), timeoutMs)),
-  ]);
-}
-
-function loadSdk(): Promise<void> {
-  if (typeof window !== 'undefined' && typeof window.show_11697097 === 'function') {
-    return Promise.resolve();
-  }
-  if (sdkPromise) return sdkPromise;
-
-  sdkPromise = withTimeout(new Promise<void>((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = SDK_SRC;
-    script.async = true;
-    script.dataset.zone = ZONE;
-    script.dataset.sdk = SDK_NAME;
-    script.onload = () => {
-      const start = Date.now();
-      const check = () => {
-        if (typeof window.show_11697097 === 'function') return resolve();
-        if (Date.now() - start > 3000) return reject(new Error('Monetag function unavailable'));
-        setTimeout(check, 100);
-      };
-      check();
-    };
-    script.onerror = () => reject(new Error('Monetag SDK failed to load'));
-    document.head.appendChild(script);
-  }), SDK_TIMEOUT_MS, 'Monetag SDK timed out').catch((error) => {
-    sdkPromise = null;
-    throw error;
-  });
-
-  return sdkPromise;
-}
-
 export const AdModal: React.FC<AdModalProps> = ({ isOpen, onAdComplete, onClose }) => {
   const startedRef = useRef(false);
   const [status, setStatus] = useState<'loading' | 'error'>('loading');
@@ -75,22 +29,34 @@ export const AdModal: React.FC<AdModalProps> = ({ isOpen, onAdComplete, onClose 
     setStatus('loading');
 
     let cancelled = false;
+    const timer = window.setTimeout(() => {
+      if (!cancelled) {
+        console.warn('Monetag did not return a rewarded ad in time.');
+        setStatus('error');
+      }
+    }, 15000);
 
     (async () => {
       try {
-        await loadSdk();
-        if (cancelled || typeof window.show_11697097 !== 'function') throw new Error('Rewarded ad unavailable');
+        // Monetag's official SDK is loaded in index.html.
+        if (typeof window.show_11697097 !== 'function') {
+          throw new Error('Monetag SDK function is not available');
+        }
+
         sounds.playClick();
-        await withTimeout(window.show_11697097(), AD_TIMEOUT_MS, 'Rewarded ad timed out');
+        await window.show_11697097();
+
         if (cancelled) return;
+        window.clearTimeout(timer);
         sounds.playAdComplete();
         onAdComplete();
       } catch (error) {
-        console.error('Rewarded ad failed:', error);
+        console.error('Monetag rewarded interstitial failed:', error);
         if (!cancelled) {
+          window.clearTimeout(timer);
           setStatus('error');
-          // Never leave the player trapped behind an ad spinner.
-          setTimeout(() => {
+          // Do not trap the player if Monetag has no fill or is unavailable.
+          window.setTimeout(() => {
             if (!cancelled) onAdComplete();
           }, 1200);
         }
@@ -99,6 +65,7 @@ export const AdModal: React.FC<AdModalProps> = ({ isOpen, onAdComplete, onClose 
 
     return () => {
       cancelled = true;
+      window.clearTimeout(timer);
     };
   }, [isOpen, onAdComplete]);
 
@@ -115,12 +82,13 @@ export const AdModal: React.FC<AdModalProps> = ({ isOpen, onAdComplete, onClose 
             {status === 'loading' ? (
               <>
                 <h3 className="text-lg font-black">Opening rewarded ad...</h3>
-                <p className="mt-2 text-sm text-slate-400">The ad has a timeout so the app cannot get stuck loading.</p>
+                <p className="mt-2 text-sm text-slate-400">Please wait while Monetag loads the ad.</p>
               </>
             ) : (
               <>
-                <h3 className="text-lg font-black">Ad unavailable</h3>
-                <p className="mt-2 text-sm text-slate-400">No rewarded ad is available right now. Starting the match instead.</p>
+                <h3 className="text-lg font-black">No ad available</h3>
+                <p className="mt-2 text-sm text-slate-400">Monetag did not return an ad. The game will continue.</p>
+                {onClose && <button onClick={onClose} className="mt-5 w-full py-3 rounded-xl bg-slate-800 font-bold">Close</button>}
               </>
             )}
           </div>
