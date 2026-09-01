@@ -28,7 +28,6 @@ export const AdModal: React.FC<AdModalProps> = ({ isOpen, onAdComplete, onClose 
 
   const startRewardedAd = async () => {
     if (status === 'loading') return;
-
     setStatus('loading');
     setErrorMessage('');
 
@@ -36,7 +35,6 @@ export const AdModal: React.FC<AdModalProps> = ({ isOpen, onAdComplete, onClose 
       if (typeof window.show_11697097 !== 'function') {
         throw new Error('Monetag SDK is not ready yet. Please try again.');
       }
-
       sounds.playClick();
       await window.show_11697097();
       sounds.playAdComplete();
@@ -60,13 +58,7 @@ export const AdModal: React.FC<AdModalProps> = ({ isOpen, onAdComplete, onClose 
         >
           <div className="p-6 text-center">
             <div className="mx-auto mb-4 w-14 h-14 rounded-2xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center">
-              {status === 'loading' ? (
-                <Loader2 className="w-7 h-7 text-sky-400 animate-spin" />
-              ) : status === 'error' ? (
-                <ShieldCheck className="w-7 h-7 text-rose-400" />
-              ) : (
-                <Play className="w-7 h-7 text-sky-400" />
-              )}
+              {status === 'loading' ? <Loader2 className="w-7 h-7 text-sky-400 animate-spin" /> : status === 'error' ? <ShieldCheck className="w-7 h-7 text-rose-400" /> : <Play className="w-7 h-7 text-sky-400" />}
             </div>
 
             {status === 'ready' && (
