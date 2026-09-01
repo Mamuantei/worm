@@ -72,14 +72,8 @@ export const AdModal: React.FC<AdModalProps> = ({ isOpen, onAdComplete, onClose 
             {status === 'ready' && (
               <>
                 <h3 className="text-lg font-black">Watch an ad to play</h3>
-                <p className="mt-2 text-sm text-slate-400">
-                  Tap the button below to open the rewarded ad.
-                </p>
-                <button
-                  type="button"
-                  onClick={startRewardedAd}
-                  className="mt-5 w-full py-3 rounded-xl bg-sky-500 hover:bg-sky-400 active:bg-sky-600 text-white font-black transition-colors"
-                >
+                <p className="mt-2 text-sm text-slate-400">Tap the button below to open the rewarded ad.</p>
+                <button type="button" onClick={startRewardedAd} className="mt-5 w-full py-3 rounded-xl bg-sky-500 hover:bg-sky-400 active:bg-sky-600 text-white font-black transition-colors">
                   Watch Ad &amp; Continue
                 </button>
               </>
@@ -95,28 +89,12 @@ export const AdModal: React.FC<AdModalProps> = ({ isOpen, onAdComplete, onClose 
             {status === 'error' && (
               <>
                 <h3 className="text-lg font-black">No ad available</h3>
-                <p className="mt-2 text-sm text-slate-400">
-                  The game will not start until a rewarded ad is successfully shown.
-                </p>
-                {errorMessage && (
-                  <p className="mt-3 text-xs text-slate-500 break-words">{errorMessage}</p>
-                )}
-                <button
-                  type="button"
-                  onClick={startRewardedAd}
-                  className="mt-5 w-full py-3 rounded-xl bg-sky-500 hover:bg-sky-400 active:bg-sky-600 text-white font-black transition-colors"
-                >
+                <p className="mt-2 text-sm text-slate-400">The game will not start until a rewarded ad is successfully shown.</p>
+                {errorMessage && <p className="mt-3 text-xs text-slate-500 break-words">{errorMessage}</p>}
+                <button type="button" onClick={startRewardedAd} className="mt-5 w-full py-3 rounded-xl bg-sky-500 hover:bg-sky-400 active:bg-sky-600 text-white font-black transition-colors">
                   Try Again
                 </button>
-                {onClose && (
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="mt-3 w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 font-bold"
-                  >
-                    Close
-                  </button>
-                )}
+                {onClose && <button type="button" onClick={onClose} className="mt-3 w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 font-bold">Close</button>}
               </>
             )}
           </div>
