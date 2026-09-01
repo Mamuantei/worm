@@ -90,8 +90,18 @@ export default function App() {
       setActiveTab('game');
     } catch (error) {
       console.error('Monetag rewarded interstitial failed:', error);
-      // Keep the game usable if Monetag has no inventory or the ad fails.
-      setActiveTab('game');
+      // Do not bypass the rewarded-ad gate when Monetag has no ad or the SDK fails.
+      const message = error instanceof Error ? error.message : 'Unknown Monetag error';
+      try {
+        const tg = (window as Window & { Telegram?: { WebApp?: { showAlert?: (message: string) => void } } }).Telegram?.WebApp;
+        if (tg?.showAlert) {
+          tg.showAlert(`No rewarded ad is available right now. Please try again.\n\n${message}`);
+        } else {
+          window.alert(`No rewarded ad is available right now. Please try again.\n\n${message}`);
+        }
+      } catch {
+        // Ignore alert failures; the user remains on the current screen.
+      }
     } finally {
       setIsAdLoading(false);
     }
