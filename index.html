@@ -12,6 +12,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="//libtl.com/sdk.js" data-zone="11697097" data-sdk="show_11697097"></script>
   </head>
   <body class="bg-[#020617] text-slate-100 antialiased min-h-screen">
     <div id="root">
@@ -20,15 +22,6 @@
       </div>
     </div>
     <script>
-      // Load the Telegram SDK after the page is ready so it can never block React startup.
-      window.addEventListener('load', function () {
-        var s = document.createElement('script');
-        s.src = 'https://telegram.org/js/telegram-web-app.js';
-        s.async = true;
-        s.onerror = function () { console.warn('Telegram WebApp SDK unavailable; continuing normally.'); };
-        document.head.appendChild(s);
-      });
-      // Never leave the user with an endless startup spinner if JavaScript fails to mount.
       setTimeout(function () {
         var root = document.getElementById('root');
         if (root && root.querySelector('#startup-loader')) {
